@@ -106,26 +106,52 @@ process.on('SIGINT', () => {
 // apply the routes to application
 // app.use('/', router);
 
+// Words blacklist
+let wordsBlacklist = [
+    'http',
+    'https',
+    'www',
+    '.com',
+    '.io'
+]
+
 // Start session with bot
 bot.use(session());
 
-// Bot middleware
-bot.use((ctx, next) => {
-    const start = new Date()
-    return next(ctx).then(() => {
-        const ms = new Date() - start
-        console.log('Response time %sms', ms)
-    })
-})
-
 // Catch text event
 bot.on('text', (ctx, next) => {
-    let text = ctx.update.message.text;
 
-    if (text.indexOf('http') > -1 || text.indexOf('www') > -1 || text.indexOf('.com') > -1) {
-        ctx.reply('Kick');
-    } else {
-        next();
+    // Variables
+    let text = ctx.message.text;
+    let userId = ctx.message.from.id;
+    let messageId = ctx.message.message_id;
+
+    // Check members messages to avoid spam and kick spammers off
+    for (var i = 0; i < wordsBlacklist.length; i++) {
+        if (text.indexOf(wordsBlacklist[i]) > -1) {
+
+            // Kick user after first warn
+            if (ctx.session.warn) {
+                ctx.kickChatMember(userId, 300);
+            } else {
+                // Set warn to true
+                ctx.session.warn = true;
+
+                // Delete user's written message
+                ctx.deleteMessage(messageId);
+
+                // Notify user about warn and possible ban
+                ctx.reply('Warn!');
+            }
+
+            // Cancel loop
+            break;
+        }
+
+        // Continue on array's last iteration
+        if (i === (wordsBlacklist.length - 1)) {
+            next();
+        }
     }
 
 });
