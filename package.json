@@ -1,0 +1,27 @@
+{
+    "name": "freitx-telegram-bot",
+    "version": "0.1.0",
+    "description": "",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon app.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/FreitX/freitx-telegram-bot.git"
+    },
+    "homepage": "https://github.com/FreitX/freitx-telegram-bot",
+    "dependencies": {
+        "body-parser": "1.18.2",
+        "compression": "1.7.1",
+        "dotenv": "5.0.0",
+        "express": "4.16.2",
+        "path": "0.12.7",
+        "telegraf": "3.20.0",
+        "uncaught": "0.0.5"
+    },
+    "devDependencies": {
+        "nodemon": "1.14.12"
+    }
+}
