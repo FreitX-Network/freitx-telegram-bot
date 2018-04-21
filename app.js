@@ -7,18 +7,6 @@ require('dotenv').config();
 // Inject Express.js framework
 const express = require('express');
 
-// Path/Routing on the server directories
-const path = require('path');
-
-// Enable GZIP compression on sent packets/responses
-const compression = require('compression');
-
-// Inject Body Parser to read information which comes from POST/PUT requests
-const bodyParser = require('body-parser');
-
-// Module to catch uncaught errors and handle to avoid applicaion crashes
-const uncaught = require('uncaught');
-
 // Initialize express.js application
 const app = express();
 
@@ -39,72 +27,16 @@ const Telegraf = require('telegraf');
 const session = require('telegraf/session');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-
-// Start error exception module
-uncaught.start();
-
 // Add error "watch dog" to log unexpected errors
-uncaught.addListener(function (err) {
-    console.log('******* START *******');
-    console.log(err);
-    console.log('******* END *******');
-});
+bot.catch((err) => {
+  console.log('Ooops', err)
+})
 
-// GZIP compression
-app.use(compression());
-
-// app.enable('trust proxy');
-
-// Limit request BODY size to 1mb (temporary size)
-app.use(bodyParser.json({
-    limit: '1mb'
-}));
-
-app.use(bodyParser.urlencoded({
-    extended: true
-}));
-
-// CORS enable in the middleware to make "public" folder available for everyone
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "X-Requested-With");
-    next();
-});
-
-// Host static & public files
-// app.use(express.static(path.join(__dirname, 'public')));
-
-app.all('/*', (req, res, next) => {
-
-    if (environment === 'PRODUCTION') {
-        // Restrict it to the required domain
-        res.header("Access-Control-Allow-Origin", URL);
-    } else {
-        // Available for any origin
-        res.header("Access-Control-Allow-Origin", "*");
-    }
-
-    // Allow methods
-    res.header('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS');
-
-    // Set custom headers for CORS
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Authorization, Content-type, Accept, X-Access-Token, X-Key');
-
-    if (req.method == 'OPTIONS') {
-        res.status(200).end();
-    } else {
-        next();
-    }
-
-});
 
 process.on('SIGINT', () => {
     console.log('Application terminated');
     process.exit(0);
 });
-
-// apply the routes to application
-// app.use('/', router);
 
 // Words blacklist
 let wordsBlacklist = [
@@ -118,40 +50,103 @@ let wordsBlacklist = [
 // Start session with bot
 bot.use(session());
 
+bot.on('new_chat_members', (ctx, next) => {
+    ctx.reply('Welcome').then((response) => {
+
+    });
+});
+
+// Catch sticker event
+bot.on('sticker', (ctx, next) => {
+    // Variables
+    let messageId = ctx.message.message_id;
+
+    // Delete user's written message
+    ctx.deleteMessage(messageId);
+});
+
+// Catch photo event
+bot.on('photo', (ctx, next) => {
+    // Variables
+    let messageId = ctx.message.message_id;
+
+    // Delete user's written message
+    ctx.deleteMessage(messageId);
+});
+
+// Catch video event
+bot.on('video', (ctx, next) => {
+    // Variables
+    let messageId = ctx.message.message_id;
+
+    // Delete user's written message
+    ctx.deleteMessage(messageId);
+});
+
+// Catch audio event
+bot.on('audio', (ctx, next) => {
+    // Variables
+    let messageId = ctx.message.message_id;
+
+    // Delete user's written message
+    ctx.deleteMessage(messageId);
+});
+
+// Catch voice event
+bot.on('voice', (ctx, next) => {
+    // Variables
+    let messageId = ctx.message.message_id;
+
+    // Delete user's written message
+    ctx.deleteMessage(messageId);
+});
+
+// Catch document event
+bot.on('document', (ctx, next) => {
+    // Variables
+    let messageId = ctx.message.message_id;
+
+    // Delete user's written message
+    ctx.deleteMessage(messageId);
+});
+
 // Catch text event
 bot.on('text', (ctx, next) => {
-
     // Variables
     let text = ctx.message.text;
     let userId = ctx.message.from.id;
+    let chatId = ctx.message.chat.id;
     let messageId = ctx.message.message_id;
 
     // Check members messages to avoid spam and kick spammers off
     for (var i = 0; i < wordsBlacklist.length; i++) {
-        if (text.indexOf(wordsBlacklist[i]) > -1) {
+        if (text.toLowerCase().indexOf(wordsBlacklist[i]) > -1) {
 
-            // Kick user after first warn
-            if (ctx.session.warn) {
-                ctx.kickChatMember(userId, 300);
-            } else {
-                // Set warn to true
-                ctx.session.warn = true;
+            // Get user's role info
+            ctx.getChatMember(userId).then((member) => {
 
-                // Delete user's written message
-                ctx.deleteMessage(messageId);
+                // If member is not creator or administrator, then delete spam message
+                if (member && (member.status !== 'creator' && member.status !== 'administrator')) {
 
-                // Notify user about warn and possible ban
-                ctx.reply('Warn!');
-            }
+                    if (!ctx.session.warn) {
+                        ctx.session.warn = 1;
+                    } else {
+                        ctx.session.warn += 1;
+                    }
 
-            // Cancel loop
-            break;
+                    // Delete user's written message
+                    ctx.deleteMessage(messageId);
+
+                    if (ctx.session.warn >= 5) {
+                        ctx.restrictChatMember(userId);
+                    }
+
+                }
+
+            });
+
         }
 
-        // Continue on array's last iteration
-        if (i === (wordsBlacklist.length - 1)) {
-            next();
-        }
     }
 
 });
