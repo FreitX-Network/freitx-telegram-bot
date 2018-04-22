@@ -44,7 +44,10 @@ let wordsBlacklist = [
     'https',
     'www',
     '.com',
-    '.io'
+    '.io',
+    't.me',
+    'telegram.me'
+    'telegram.dog'
 ]
 
 // Start session with bot
