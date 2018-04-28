@@ -27,15 +27,11 @@ const Telegraf = require('telegraf');
 const session = require('telegraf/session');
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
+let processChatId = process.env.CHAT_ID;
+
 // Add error "watch dog" to log unexpected errors
 bot.catch((err) => {
   console.log('Ooops', err)
-})
-
-
-process.on('SIGINT', () => {
-    console.log('Application terminated');
-    process.exit(0);
 });
 
 // Words blacklist
@@ -56,6 +52,18 @@ let wordsBlacklist = [
 // Start session with bot
 bot.use(session());
 
+// Send message every 1 hour
+setInterval(function () {
+    bot.telegram.sendMessage(processChatId, 'Community Rules...')
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
+}, 3600000);
+
+// Send welcome message to new members
 bot.on('new_chat_members', (ctx, next) => {
     ctx.reply('Welcome').then((response) => {
 
@@ -68,7 +76,13 @@ bot.on('sticker', (ctx, next) => {
     let messageId = ctx.message.message_id;
 
     // Delete user's written message
-    ctx.deleteMessage(messageId);
+    ctx.deleteMessage(messageId)
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 });
 
 // Catch photo event
@@ -77,7 +91,13 @@ bot.on('photo', (ctx, next) => {
     let messageId = ctx.message.message_id;
 
     // Delete user's written message
-    ctx.deleteMessage(messageId);
+    ctx.deleteMessage(messageId)
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 });
 
 // Catch video event
@@ -86,7 +106,13 @@ bot.on('video', (ctx, next) => {
     let messageId = ctx.message.message_id;
 
     // Delete user's written message
-    ctx.deleteMessage(messageId);
+    ctx.deleteMessage(messageId)
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 });
 
 // Catch audio event
@@ -95,7 +121,13 @@ bot.on('audio', (ctx, next) => {
     let messageId = ctx.message.message_id;
 
     // Delete user's written message
-    ctx.deleteMessage(messageId);
+    ctx.deleteMessage(messageId)
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 });
 
 // Catch voice event
@@ -104,7 +136,13 @@ bot.on('voice', (ctx, next) => {
     let messageId = ctx.message.message_id;
 
     // Delete user's written message
-    ctx.deleteMessage(messageId);
+    ctx.deleteMessage(messageId)
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 });
 
 // Catch document event
@@ -113,7 +151,13 @@ bot.on('document', (ctx, next) => {
     let messageId = ctx.message.message_id;
 
     // Delete user's written message
-    ctx.deleteMessage(messageId);
+    ctx.deleteMessage(messageId)
+    .then((success) => {
+        // console.log(success);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
 });
 
 // Catch text event
@@ -123,6 +167,11 @@ bot.on('text', (ctx, next) => {
     let userId = ctx.message.from.id;
     let chatId = ctx.message.chat.id;
     let messageId = ctx.message.message_id;
+
+    // Update chatId
+    if (processChatId !== chatId) {
+        processChatId = chatId;
+    }
 
     // Check members messages to avoid spam and kick spammers off
     for (var i = 0; i < wordsBlacklist.length; i++) {
@@ -141,10 +190,22 @@ bot.on('text', (ctx, next) => {
                     }
 
                     // Delete user's written message
-                    ctx.deleteMessage(messageId);
+                    ctx.deleteMessage(messageId)
+                    .then((success) => {
+                        // console.log(success);
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
 
                     if (ctx.session.warn >= 5) {
-                        ctx.restrictChatMember(userId);
+                        ctx.restrictChatMember(userId)
+                        .then((success) => {
+                            // console.log(success);
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                        });
                     }
 
                 }
@@ -162,3 +223,8 @@ bot.startPolling();
 
 // Host application on dedicated port
 app.listen(port || 3001);
+
+process.on('SIGINT', () => {
+    console.log('Application terminated');
+    process.exit(0);
+});
